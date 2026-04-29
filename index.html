@@ -74,17 +74,17 @@ svg#rs{width:100%;height:auto;display:block;}
   <div id="layout">
     <div id="leg-left" class="leg"></div>
     <div id="rw">
-      <svg id="rs" viewBox="0 0 640 640" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="320" cy="320" r="290" fill="none" stroke="#e8453c" stroke-width="1.2" stroke-opacity="0.3"/>
-        <circle cx="320" cy="320" r="217" fill="none" stroke="#f07c3a" stroke-width="1.2" stroke-opacity="0.35"/>
-        <circle cx="320" cy="320" r="145" fill="none" stroke="#f5a623" stroke-width="1.2" stroke-opacity="0.4"/>
-        <circle cx="320" cy="320" r="72"  fill="none" stroke="#3dbf8a" stroke-width="1.5" stroke-opacity="0.55"/>
-        <line x1="320" y1="28" x2="320" y2="612" stroke="#e0e0dc" stroke-width="0.8" stroke-dasharray="4 5"/>
-        <line x1="28"  y1="320" x2="612" y2="320" stroke="#e0e0dc" stroke-width="0.8" stroke-dasharray="4 5"/>
-        <text x="160" y="44" font-size="11" fill="#c0bdb8" font-family="Helvetica Neue,Arial,sans-serif" text-anchor="middle">Методологии</text>
-        <text x="480" y="44" font-size="11" fill="#c0bdb8" font-family="Helvetica Neue,Arial,sans-serif" text-anchor="middle">AI-инструменты</text>
-        <text x="160" y="600" font-size="11" fill="#c0bdb8" font-family="Helvetica Neue,Arial,sans-serif" text-anchor="middle">Процессы</text>
-        <text x="480" y="600" font-size="11" fill="#c0bdb8" font-family="Helvetica Neue,Arial,sans-serif" text-anchor="middle">Инструменты</text>
+      <svg id="rs" viewBox="0 0 800 800" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="400" cy="400" r="362" fill="none" stroke="#e8453c" stroke-width="1.2" stroke-opacity="0.3"/>
+        <circle cx="400" cy="400" r="271" fill="none" stroke="#f07c3a" stroke-width="1.2" stroke-opacity="0.35"/>
+        <circle cx="400" cy="400" r="181" fill="none" stroke="#f5a623" stroke-width="1.2" stroke-opacity="0.4"/>
+        <circle cx="400" cy="400" r="90"  fill="none" stroke="#3dbf8a" stroke-width="1.5" stroke-opacity="0.55"/>
+        <line x1="400" y1="35" x2="400" y2="765" stroke="#e0e0dc" stroke-width="0.8" stroke-dasharray="4 5"/>
+        <line x1="35"  y1="400" x2="765" y2="400" stroke="#e0e0dc" stroke-width="0.8" stroke-dasharray="4 5"/>
+        <text x="200" y="55" font-size="11" fill="#c0bdb8" font-family="Helvetica Neue,Arial,sans-serif" text-anchor="middle">Методологии</text>
+        <text x="600" y="55" font-size="11" fill="#c0bdb8" font-family="Helvetica Neue,Arial,sans-serif" text-anchor="middle">AI-инструменты</text>
+        <text x="200" y="750" font-size="11" fill="#c0bdb8" font-family="Helvetica Neue,Arial,sans-serif" text-anchor="middle">Процессы</text>
+        <text x="600" y="750" font-size="11" fill="#c0bdb8" font-family="Helvetica Neue,Arial,sans-serif" text-anchor="middle">Инструменты</text>
         <g id="dl"></g>
       </svg>
       <div id="rtt"></div>
@@ -95,10 +95,10 @@ svg#rs{width:100%;height:auto;display:block;}
 
 <script>
 const RINGS=[
-  {name:'Это база',        color:'#3dbf8a',bg:'#e8f7f0',bd:'#a8dfc8',r:72},
-  {name:'В части команд',  color:'#f5a623',bg:'#fef4e4',bd:'#f5d08a',r:145},
-  {name:'Единицы пробуют', color:'#f07c3a',bg:'#fdf0ea',bd:'#f0b89a',r:217},
-  {name:'Присматриваемся', color:'#e8453c',bg:'#fdf0f0',bd:'#f0a0a0',r:290},
+  {name:'Это база',        color:'#3dbf8a',bg:'#e8f7f0',bd:'#a8dfc8',r:90},
+  {name:'В части команд',  color:'#f5a623',bg:'#fef4e4',bd:'#f5d08a',r:181},
+  {name:'Единицы пробуют', color:'#f07c3a',bg:'#fdf0ea',bd:'#f0b89a',r:271},
+  {name:'Присматриваемся', color:'#e8453c',bg:'#fdf0f0',bd:'#f0a0a0',r:362},
 ];
 const QUADS={
   methods:{name:'Методологии',   angle:[Math.PI,Math.PI*1.5],  color:'#7c5cbf',side:'left'},
@@ -172,20 +172,66 @@ function prepareItems(raw){
 }
 const items=prepareItems(ITEMS);
 
-const CX=320,CY=320,NS='http://www.w3.org/2000/svg';
+const CX=400,CY=400,NS='http://www.w3.org/2000/svg';
 function svgEl(tag,attrs,parent){const e=document.createElementNS(NS,tag);for(const[k,v]of Object.entries(attrs))e.setAttribute(k,v);if(parent)parent.appendChild(e);return e;}
 function seedAngle(name,q){let h=0;for(let i=0;i<name.length;i++)h=(h*31+name.charCodeAt(i))&0xfffff;const[a1,a2]=QUADS[q].angle,m=0.13;return a1+m+((h%1000)/1000)*(a2-a1-m*2);}
 function seedRadius(name,ring){let h=0;for(let i=0;i<name.length;i++)h=(h*17+name.charCodeAt(i))&0xfffff;const inner=ring===0?12:RINGS[ring-1].r+10,outer=RINGS[ring].r-12;return inner+((h%1000)/1000)*(outer-inner);}
 function placeDots(its){
   const p=its.map(d=>{const a=seedAngle(d.name,d.q),r=seedRadius(d.name,d.ring);return{...d,x:CX+r*Math.cos(a),y:CY+r*Math.sin(a)};});
-  for(let it=0;it<200;it++)for(let i=0;i<p.length;i++)for(let j=i+1;j<p.length;j++){
+  for(let it=0;it<300;it++)for(let i=0;i<p.length;i++)for(let j=i+1;j<p.length;j++){
     const dx=p[j].x-p[i].x,dy=p[j].y-p[i].y,dist=Math.sqrt(dx*dx+dy*dy);
-    if(dist<18&&dist>0){const push=(18-dist)/2,nx=dx/dist,ny=dy/dist;p[i].x-=nx*push;p[i].y-=ny*push;p[j].x+=nx*push;p[j].y+=ny*push;}
+    if(dist<20&&dist>0){const push=(20-dist)/2,nx=dx/dist,ny=dy/dist;p[i].x-=nx*push;p[i].y-=ny*push;p[j].x+=nx*push;p[j].y+=ny*push;}
   }
   return p;
 }
 
-let dots=[],dotEls=[],activeQ='all',activeR='all';
+let dots=[],dotEls=[],activeQ='all',activeR='all',selectedDot=null;
+
+function selectDotByItem(d){
+  // Deselect previous
+  if(selectedDot&&selectedDot!==d){
+    const prev=dotEls.find(g=>g._d===selectedDot);
+    if(prev){prev._c.setAttribute('fill',RINGS[selectedDot.ring].color);prev._c.setAttribute('r','11');prev._c.setAttribute('opacity','0.88');}
+  }
+  if(selectedDot===d){
+    // Toggle off
+    const cur=dotEls.find(g=>g._d===d);
+    if(cur){cur._c.setAttribute('fill',RINGS[d.ring].color);cur._c.setAttribute('r','11');cur._c.setAttribute('opacity','0.88');}
+    selectedDot=null;
+    document.getElementById('rtt').style.display='none';
+    hlLeg(null);
+    return;
+  }
+  selectedDot=d;
+  const gEl=dotEls.find(g=>g._d===d);
+  if(gEl){
+    gEl._c.setAttribute('fill','#2563eb');
+    gEl._c.setAttribute('r','14');
+    gEl._c.setAttribute('opacity','1');
+  }
+  hlLeg(d.num);
+  // Show tooltip at dot position
+  const tt=document.getElementById('rtt');
+  tt.innerHTML=`<b style="font-size:13px">${d.num}. ${d.name}</b>${d.desc?`<br><span style="color:var(--text2);font-size:11px">${d.desc}</span>`:''}`;
+  tt.style.display='block';
+  const svg=document.getElementById('rs');
+  const rect=svg.getBoundingClientRect();
+  const rw=document.getElementById('rw');
+  const rwRect=rw.getBoundingClientRect();
+  const scale=rect.width/800;
+  let lx=d.x*scale+16;
+  let ly=(d.y-10)*scale;
+  // keep tooltip inside radar wrap
+  const ttW=240;
+  if(lx+ttW>rect.width) lx=d.x*scale-ttW-8;
+  tt.style.left=lx+'px';
+  tt.style.top=ly+'px';
+  // Scroll dot into view smoothly
+  const dotScreenY=rect.top+d.y*scale;
+  if(dotScreenY<80||dotScreenY>window.innerHeight-80){
+    window.scrollTo({top:window.scrollY+dotScreenY-window.innerHeight/2,behavior:'smooth'});
+  }
+}
 
 function buildRadar(){
   document.getElementById('dl').innerHTML='';dotEls=[];
@@ -201,13 +247,31 @@ function buildRadar(){
       c.setAttribute('r','14');c.setAttribute('opacity','1');
       tt.innerHTML=`<b style="font-size:13px">${d.num}. ${d.name}</b>${d.desc?`<br><span style="color:var(--text2);font-size:11px">${d.desc}</span>`:''}`;
       tt.style.display='block';
-      const scale=document.getElementById('rs').getBoundingClientRect().width/640;
+      const scale=document.getElementById('rs').getBoundingClientRect().width/800;
       let lx=d.x*scale+14, ly=(d.y-10)*scale;
-      // keep tooltip inside viewport
       tt.style.left=lx+'px';tt.style.top=ly+'px';
       hlLeg(d.num);
     });
-    g.addEventListener('mouseleave',()=>{c.setAttribute('r','11');c.setAttribute('opacity','0.88');tt.style.display='none';hlLeg(null);});
+    g.addEventListener('mouseleave',()=>{
+      if(selectedDot!==d){c.setAttribute('r','11');c.setAttribute('opacity','0.88');}
+      tt.style.display='none';hlLeg(null);
+    });
+    g.addEventListener('click',()=>{
+      // Deselect previous
+      if(selectedDot&&selectedDot!==d){
+        const prev=dotEls.find(g=>g._d===selectedDot);
+        if(prev){prev._c.setAttribute('fill',RINGS[selectedDot.ring].color);prev._c.setAttribute('r','11');prev._c.setAttribute('opacity','0.88');}
+      }
+      if(selectedDot===d){
+        // Toggle off
+        c.setAttribute('fill',RINGS[d.ring].color);c.setAttribute('r','11');c.setAttribute('opacity','0.88');
+        selectedDot=null;
+      } else {
+        c.setAttribute('fill','#2563eb');c.setAttribute('r','14');c.setAttribute('opacity','1');
+        selectedDot=d;
+      }
+      hlLeg(selectedDot?selectedDot.num:null);
+    });
   }
   applyFilters();
 }
@@ -215,6 +279,8 @@ function buildRadar(){
 function hlLeg(num){document.querySelectorAll('.leg-item').forEach(el=>el.classList.toggle('hl',el.dataset.num==num));}
 
 function applyFilters(){
+  selectedDot=null;
+  dotEls.forEach(g=>{g._c.setAttribute('fill',RINGS[g._d.ring].color);g._c.setAttribute('r','11');g._c.setAttribute('opacity','0.88');});
   dotEls.forEach(g=>{const d=g._d;const ok=(activeQ==='all'||d.q===activeQ)&&(activeR==='all'||d.ring===parseInt(activeR));g.setAttribute('opacity',ok?'1':'0.05');});
   renderLegend();
 }
@@ -238,7 +304,8 @@ function renderLegend(){
         const item=document.createElement('div');item.className='leg-item';item.dataset.num=d.num;
         item.innerHTML=`<span class="n">${d.num}.</span><span>${d.name}</span>`;
         item.addEventListener('mouseenter',()=>{const g=dotEls.find(g=>g._d.num===d.num);if(g){g._c.setAttribute('r','14');g._c.setAttribute('opacity','1');}hlLeg(d.num);});
-        item.addEventListener('mouseleave',()=>{const g=dotEls.find(g=>g._d.num===d.num);if(g){g._c.setAttribute('r','11');g._c.setAttribute('opacity','0.88');}hlLeg(null);});
+        item.addEventListener('mouseleave',()=>{const g=dotEls.find(g=>g._d.num===d.num);if(g&&selectedDot!==g._d){g._c.setAttribute('r','11');g._c.setAttribute('opacity','0.88');}hlLeg(selectedDot?selectedDot.num:null);});
+        item.addEventListener('click',()=>selectDotByItem(d));
         rg.appendChild(item);
       }
       sec.appendChild(rg);
