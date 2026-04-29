@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TravelLine Tech Radar BA&SA</title>
+<style>
+  :root {
+    --c0:#3dbf8a; --c0bg:#e8f7f0; --c0bd:#a8dfc8;
+    --c1:#f5a623; --c1bg:#fef4e4; --c1bd:#f5d08a;
+    --c2:#f07c3a; --c2bg:#fdf0ea; --c2bd:#f0b89a;
+    --c3:#e8453c; --c3bg:#fdf0f0; --c3bd:#f0a0a0;
+    --bg:#ffffff; --bg2:#f7f7f5; --text:#1a1a18; --text2:#6b6b67; --text3:#a0a09c;
+    --border:rgba(0,0,0,0.1); --border2:rgba(0,0,0,0.06); --radius:8px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:'Helvetica Neue',Arial,sans-serif;font-size:13px;line-height:1.5;}
+  #app{max-width:1100px;margin:0 auto;padding:24px 20px;}
+
+  #hdr{margin-bottom:24px;border-bottom:1px solid var(--border2);padding-bottom:20px;display:flex;justify-content:space-between;align-items:flex-end;}
+  #hdr h1{font-size:28px;font-weight:600;letter-spacing:-.5px;margin-bottom:4px;font-family:Georgia,serif;}
+  #hdr .sub{font-size:13px;color:var(--text2);}
+  #sheets-status{font-size:11px;color:var(--text3);display:flex;align-items:center;gap:6px;}
+  #status-dot{width:7px;height:7px;border-radius:50%;background:var(--text3);flex-shrink:0;}
+  #status-dot.ok{background:var(--c0);}
+  #status-dot.err{background:var(--c3);}
+  #status-dot.loading{background:var(--c1);animation:pulse 1s infinite;}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+  #config-bar{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;margin-bottom:20px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;}
+  #config-bar label{font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text3);}
+  #sheets-url-input{flex:1;min-width:200px;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:11px;font-family:inherit;background:var(--bg);color:var(--text);outline:none;}
+  #sheets-url-input:focus{border-color:var(--text3);}
+  #load-btn{padding:6px 14px;background:var(--text);color:var(--bg);border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap;}
+  #load-btn:hover{opacity:.8;}
+  #config-toggle{font-size:11px;color:var(--text3);cursor:pointer;text-decoration:underline;white-space:nowrap;}
+
+  #filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:24px;align-items:center;}
+  .flabel{font-size:10px;font-weight:600;letter-spacing:.08em;color:var(--text3);text-transform:uppercase;margin-right:2px;}
+  .sep{width:1px;height:20px;background:var(--border);margin:0 8px;}
+  .fbtn{font-size:11px;padding:4px 14px;border-radius:20px;border:1px solid var(--border);background:var(--bg);color:var(--text2);cursor:pointer;transition:all .15s;font-family:inherit;}
+  .fbtn:hover{border-color:var(--text3);color:var(--text);}
+  .fbtn.active{background:var(--text);color:var(--bg);border-color:var(--text);}
+  .rbtn{font-size:11px;padding:4px 14px;border-radius:20px;border:1px solid var(--border);background:var(--bg);color:var(--text2);cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:all .15s;font-family:inherit;}
+  .rbtn:hover{border-color:var(--text3);color:var(--text);}
+  .rbtn.active{background:var(--bg2);border-color:var(--text3);color:var(--text);font-weight:500;}
+  .rdot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+
+  #layout{display:grid;grid-template-columns:170px 1fr 170px;gap:0 16px;align-items:start;}
+  .leg{padding-top:8px;}
+  .leg-section{margin-bottom:28px;}
+  .leg-qtitle{font-size:13px;font-weight:600;margin-bottom:10px;}
+  .leg-rgroup{margin-bottom:11px;}
+  .leg-rlabel{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:3px;}
+  .leg-item{font-size:11px;color:var(--text2);line-height:1.85;display:flex;gap:4px;cursor:pointer;transition:color .1s;}
+  .leg-item:hover{color:var(--text);}
+  .leg-item .n{min-width:20px;text-align:right;color:var(--text3);flex-shrink:0;}
+  .leg-item.hl{color:var(--text);font-weight:600;}
+
+  #rw{position:relative;}
+  svg#rs{width:100%;height:auto;display:block;}
+  #rtt{position:absolute;display:none;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:6px 12px;font-size:12px;color:var(--text);pointer-events:none;white-space:nowrap;z-index:10;box-shadow:0 4px 16px rgba(0,0,0,.1);}
+
+  #loading-overlay{position:absolute;inset:0;background:rgba(255,255,255,.85);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;border-radius:8px;z-index:20;}
+  #loading-overlay.hidden{display:none;}
+  .spinner{width:28px;height:28px;border:2px solid var(--border);border-top-color:var(--text);border-radius:50%;animation:spin .7s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .loading-text{font-size:12px;color:var(--text2);}
+
+  #error-msg{background:var(--c3bg);border:1px solid var(--c3bd);border-radius:var(--radius);padding:12px 16px;font-size:12px;color:var(--c3);margin-bottom:16px;display:none;}
+  #error-msg a{color:var(--c3);font-weight:600;}
+
+  @media(max-width:900px){#layout{grid-template-columns:1fr;} .leg{display:grid;grid-template-columns:1fr 1fr;gap:0 24px;} #hdr{flex-direction:column;align-items:flex-start;gap:8px;}}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+<div id="app">
+  <div id="hdr">
+    <div>
+      <h1>TravelLine Tech Radar BA&amp;SA</h1>
+      <div class="sub">Инструменты и практики бизнес- и системных аналитиков</div>
+    </div>
+    <div id="sheets-status">
+      <div id="status-dot"></div>
+      <span id="status-text">Не подключено</span>
+      <span style="color:var(--border);margin:0 2px;">·</span>
+      <span id="config-toggle" onclick="toggleConfig()">Настроить источник</span>
+    </div>
+  </div>
+
+  <!-- Config bar (hidden by default) -->
+  <div id="config-bar" style="display:none;">
+    <label>CSV из Google Sheets</label>
+    <input id="sheets-url-input" type="text" placeholder="https://docs.google.com/spreadsheets/d/.../pub?output=xlsx">
+    <button id="load-btn" onclick="loadFromSheets()">Загрузить</button>
+    <a href="#" onclick="showInstructions();return false;" style="font-size:11px;color:var(--text3);">Как получить ссылку?</a>
+  </div>
+
+  <div id="error-msg"></div>
+
+  <div id="filters">
+    <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:8px;">
+      <span class="flabel">Квадрант:</span>
+      <button class="fbtn active" data-q="all">Все</button>
+      <button class="fbtn" data-q="methods">Методологии</button>
+      <button class="fbtn" data-q="tools">Инструменты</button>
+      <button class="fbtn" data-q="ai">AI</button>
+      <button class="fbtn" data-q="process">Процессы</button>
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+      <span class="flabel">Кольца:</span>
+      <button class="rbtn active" data-r="all"><span class="rdot" style="background:#aaa"></span>Все</button>
+      <button class="rbtn" data-r="0"><span class="rdot" style="background:var(--c0)"></span>Это база</button>
+      <button class="rbtn" data-r="1"><span class="rdot" style="background:var(--c1)"></span>В части команд</button>
+      <button class="rbtn" data-r="2"><span class="rdot" style="background:var(--c2)"></span>Единицы пробуют</button>
+      <button class="rbtn" data-r="3"><span class="rdot" style="background:var(--c3)"></span>Присматриваемся</button>
+    </div>
+  </div>
+
+  <div id="layout">
+    <div id="leg-left" class="leg"></div>
+    <div id="rw">
+      <svg id="rs" viewBox="0 0 560 560" style="max-width:520px;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="280" cy="280" r="255" fill="none" stroke="#e8453c" stroke-width="1.2" stroke-opacity="0.3"/>
+        <circle cx="280" cy="280" r="190" fill="none" stroke="#f07c3a" stroke-width="1.2" stroke-opacity="0.35"/>
+        <circle cx="280" cy="280" r="127" fill="none" stroke="#f5a623" stroke-width="1.2" stroke-opacity="0.4"/>
+        <circle cx="280" cy="280" r="63"  fill="none" stroke="#3dbf8a" stroke-width="1.5" stroke-opacity="0.55"/>
+        <line x1="280" y1="22" x2="280" y2="538" stroke="#e0e0dc" stroke-width="0.8" stroke-dasharray="4 5"/>
+        <line x1="22"  y1="280" x2="538" y2="280" stroke="#e0e0dc" stroke-width="0.8" stroke-dasharray="4 5"/>
+        <text x="140" y="38" font-size="11" fill="#c0bdb8" font-family="Helvetica Neue,Arial,sans-serif" text-anchor="middle">Методологии</text>
+        <text x="420" y="38" font-size="11" fill="#c0bdb8" font-family="Helvetica Neue,Arial,sans-serif" text-anchor="middle">AI-инструменты</text>
+        <text x="140" y="522" font-size="11" fill="#c0bdb8" font-family="Helvetica Neue,Arial,sans-serif" text-anchor="middle">Процессы</text>
+        <text x="420" y="522" font-size="11" fill="#c0bdb8" font-family="Helvetica Neue,Arial,sans-serif" text-anchor="middle">Инструменты</text>
+        <g id="dl"></g>
+      </svg>
+      <div id="loading-overlay">
+        <div class="spinner"></div>
+        <div class="loading-text">Загружаем данные из Google Sheets…</div>
+      </div>
+      <div id="rtt"></div>
+    </div>
+    <div id="leg-right" class="leg"></div>
+  </div>
+</div>
+
+<script>
+const RINGS=[
+  {name:'Это база',        color:'#3dbf8a',bg:'#e8f7f0',bd:'#a8dfc8',r:63},
+  {name:'В части команд',  color:'#f5a623',bg:'#fef4e4',bd:'#f5d08a',r:127},
+  {name:'Единицы пробуют', color:'#f07c3a',bg:'#fdf0ea',bd:'#f0b89a',r:190},
+  {name:'Присматриваемся', color:'#e8453c',bg:'#fdf0f0',bd:'#f0a0a0',r:255},
+];
+const QUADS={
+  methods:{name:'Методологии',   angle:[Math.PI,Math.PI*1.5],  color:'#7c5cbf',side:'left'},
+  process:{name:'Процессы',      angle:[Math.PI*.5,Math.PI],   color:'#2060b0',side:'left'},
+  ai:     {name:'AI-инструменты',angle:[0,Math.PI*.5],         color:'#c47820',side:'right'},
+  tools:  {name:'Инструменты',   angle:[Math.PI*1.5,Math.PI*2],color:'#1a8a5a',side:'right'},
+};
+
+// Встроенные данные — используются если Google Sheets не подключён
+const FALLBACK_ITEMS=[
+  {name:'BPMN',q:'methods',ring:0,desc:'Business Process Model and Notation — стандарт нотации для описания бизнес-процессов'},
+  {name:'CJM',q:'methods',ring:0,desc:'Customer Journey Map — карта пути пользователя через все точки контакта с продуктом'},
+  {name:'CustDev',q:'methods',ring:0,desc:'Customer Development — интервью и эксперименты для проверки гипотез'},
+  {name:'Double Diamond',q:'methods',ring:0,desc:'Структура дизайн-мышления: расходимся в исследовании проблемы → сходимся к решению'},
+  {name:'SMART',q:'methods',ring:0,desc:'Критерии постановки целей: Specific Measurable Achievable Relevant Time-bound'},
+  {name:'Story Mapping',q:'methods',ring:0,desc:'Визуализация бэклога через путь пользователя. Помогает расставить приоритеты и выделить MVP'},
+  {name:'Use Cases',q:'methods',ring:0,desc:'Сценарии взаимодействия актора с системой'},
+  {name:'User Stories',q:'methods',ring:0,desc:'Короткие описания функциональности с точки зрения пользователя'},
+  {name:'Глубинное интервью',q:'methods',ring:0,desc:'Качественное исследование: разговор с пользователем для понимания его контекста и мотивов'},
+  {name:'C4',q:'methods',ring:1,desc:'Четырёхуровневая модель архитектуры: Context Container Component Code'},
+  {name:'MoSCoW',q:'methods',ring:1,desc:'Must/Should/Could/Won\'t — быстрая приоритизация требований со стейкхолдерами'},
+  {name:'RICE',q:'methods',ring:1,desc:'Фреймворк приоритизации: Reach Impact Confidence Effort'},
+  {name:'Specification by Example',q:'methods',ring:1,desc:'Описание требований через конкретные примеры поведения системы. Основа для BDD'},
+  {name:'Event Storming',q:'methods',ring:2,desc:'Воркшоп для совместного исследования доменной логики через события'},
+  {name:'Risk Storming',q:'methods',ring:2,desc:'Воркшоп для выявления рисков в архитектуре совместно с командой'},
+  {name:'UML',q:'methods',ring:2,desc:'Unified Modeling Language — используем точечно там где нужна строгость нотации'},
+  {name:'Domain Storytelling',q:'methods',ring:3,desc:'Совместное исследование домена через истории со стейкхолдерами'},
+  {name:'Wardley Mapping',q:'methods',ring:3,desc:'Стратегическое картирование эволюции компонентов продукта'},
+  {name:'WSJF',q:'methods',ring:3,desc:'Weighted Shortest Job First — приоритизация по соотношению ценности и времени'},
+  {name:'Карта влияния (Impact Mapping)',q:'methods',ring:3,desc:'Связывает бизнес-цели с фичами через акторов и их действия'},
+  {name:'Карта результатов (Outcome Mapping)',q:'methods',ring:3,desc:'Фокус на изменении поведения стейкхолдеров а не на выходах'},
+  {name:'Confluence',q:'tools',ring:0,desc:'Основная система документирования в компании'},
+  {name:'Figma',q:'tools',ring:0,desc:'Инструмент для прототипирования и работы с дизайном интерфейсов'},
+  {name:'Holst',q:'tools',ring:0,desc:'Внутренний инструмент для работы с требованиями и документацией'},
+  {name:'Jira',q:'tools',ring:0,desc:'Основной инструмент для управления задачами и бэклогом'},
+  {name:'Miro',q:'tools',ring:0,desc:'Онлайн-доска для воркшопов карт и коллаборации'},
+  {name:'draw.io',q:'tools',ring:0,desc:'Инструмент для создания диаграмм: схемы БД архитектурные диаграммы флоучарты'},
+  {name:'Metabase',q:'tools',ring:1,desc:'BI-инструмент для создания дашбордов и отчётов без SQL'},
+  {name:'SQL',q:'tools',ring:1,desc:'Язык запросов для анализа данных. Самостоятельные выборки без запросов к разработке'},
+  {name:'Swagger/OpenAPI',q:'tools',ring:1,desc:'Стандарт описания REST API. Используем для документирования и согласования контрактов'},
+  {name:'Mermaid',q:'tools',ring:2,desc:'Диаграммы как код — описываешь текстом получаешь схему. Работает в Confluence и Git'},
+  {name:'Notion',q:'tools',ring:2,desc:'Альтернативная система документирования. Оцениваем как дополнение к Confluence'},
+  {name:'Stormbpmn',q:'tools',ring:2,desc:'AI-инструмент для генерации BPMN-диаграмм'},
+  {name:'n8n',q:'tools',ring:2,desc:'Автоматизация рабочих процессов с визуальным конструктором'},
+  {name:'GPT',q:'ai',ring:0,desc:'ChatGPT / GPT-4o от OpenAI. Используем для генерации текстов анализа требований мозгового штурма'},
+  {name:'ИИскатель',q:'ai',ring:0,desc:'Локально развёрнутая LLM-модель компании. Используем для задач с конфиденциальными данными'},
+  {name:'AI-агенты типа project_researcher',q:'ai',ring:1,desc:'Claude-агент для исследования проектного контекста. Пробуем в рабочих сценариях'},
+  {name:'Claude',q:'ai',ring:1,desc:'Claude от Anthropic. Используем для работы с документами анализа написания требований'},
+  {name:'RAG-системы для анализа legacy',q:'ai',ring:1,desc:'Retrieval-Augmented Generation для анализа унаследованных систем и документации'},
+  {name:'Cursor',q:'ai',ring:2,desc:'AI-редактор для аналитика пишущего SQL или автоматизирующего рутину скриптами'},
+  {name:'Gamma.ai',q:'ai',ring:2,desc:'Инструмент для создания презентаций с помощью AI'},
+  {name:'Lovable',q:'ai',ring:2,desc:'AI-инструмент для генерации веб-интерфейсов по описанию. Пробуем для прототипирования'},
+  {name:'Claude Design',q:'ai',ring:3,desc:'Claude-агент для работы с дизайном и UX-решениями'},
+  {name:'Анализ данных',q:'process',ring:0,desc:'Работа с данными продукта: метрики воронки когорты. Основа продуктовых решений'},
+  {name:'Пилотное тестирование',q:'process',ring:0,desc:'Ограниченный запуск фичи на части пользователей перед полным роллаутом'},
+  {name:'Тестирование требований',q:'process',ring:0,desc:'Проверка требований на корректность полноту и непротиворечивость до передачи в разработку'},
+  {name:'A/B тесты',q:'process',ring:1,desc:'Контролируемые эксперименты для проверки гипотез о влиянии изменений на метрики'},
+  {name:'JTBD-интервью',q:'process',ring:1,desc:'Структурированные интервью по методологии Switch / Competing Against Luck'},
+  {name:'Discovery-спринты',q:'process',ring:2,desc:'Выделенные итерации для исследования до начала разработки'},
+  {name:'Docs-as-code',q:'process',ring:2,desc:'Документация как код — хранится в репозитории версионируется проходит ревью'},
+  {name:'Continuous Discovery',q:'process',ring:3,desc:'Еженедельные интервью с пользователями как постоянная практика (Teresa Torres)'},
+  {name:'Метрики качества требований',q:'process',ring:3,desc:'Измеряем дефекты из-за требований и переделки — для улучшения качества артефактов'},
+  {name:'Ретроспектива требований',q:'process',ring:3,desc:'Разбор дефектов связанных с качеством требований — что пошло не так и почему'},
+];
+
+let ITEMS = [];
+const SHEETS_KEY = 'tl_radar_sheets_url';
+
+// ── XLSX parser ─────────────────────────────────────────────
+// Maps Russian column headers to internal keys
+const COL_MAP = {
+  'name':'name','название':'name',
+  'quadrant':'quadrant','квадрант':'quadrant',
+  'ring':'ring','кольцо':'ring',
+  'description':'description','описание':'description',
+};
+
+function cleanKey(k){
+  // Remove BOM, trim, lowercase
+  return k.replace(/^\uFEFF/, '').replace(/^\xEF\xBB\xBF/, '').trim().toLowerCase();
+}
+
+function xlsxToItems(rows) {
+  return rows
+    .map(r => {
+      const norm = {};
+      for (const [k,v] of Object.entries(r)) {
+        const mapped = COL_MAP[cleanKey(k)];
+        if (mapped) norm[mapped] = String(v).trim();
+      }
+      return norm;
+    })
+    .filter(r => r.name && r.quadrant && r.ring !== undefined && r.ring !== '')
+    .map(r => ({
+      name: r.name,
+      q: r.quadrant,
+      ring: parseInt(r.ring),
+      desc: r.description || '',
+    }))
+    .filter(r => QUADS[r.q] && r.ring >= 0 && r.ring <= 3);
+}
+
+// ── Sort & number ───────────────────────────────────────────
+function sortKey(name) {
+  const c = name[0];
+  return (c.charCodeAt(0) > 127 ? '1' : '0') + name.toLowerCase();
+}
+function prepareItems(raw) {
+  const quadOrder = {methods:0, process:1, ai:2, tools:3};
+  const sorted = [...raw].sort((a,b) => {
+    if (quadOrder[a.q] !== quadOrder[b.q]) return quadOrder[a.q] - quadOrder[b.q];
+    if (a.ring !== b.ring) return a.ring - b.ring;
+    return sortKey(a.name).localeCompare(sortKey(b.name));
+  });
+  sorted.forEach((d,i) => d.num = i+1);
+  return sorted;
+}
+
+// ── Load from Sheets ────────────────────────────────────────
+async function loadFromSheets() {
+  const url = document.getElementById('sheets-url-input').value.trim();
+  if (!url) return;
+  setStatus('loading', 'Загрузка…');
+  showOverlay(true);
+  hideError();
+  try {
+    const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
+    const resp = await fetch(proxyUrl);
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const arrayBuf = await resp.arrayBuffer();
+    const data = new Uint8Array(arrayBuf);
+    const workbook = XLSX.read(data, {type:'array', codepage:65001, cellText:true, raw:false});
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(sheet, {defval:'', raw:false});
+    const items = xlsxToItems(rows);
+    if (!items.length) throw new Error('Не удалось распознать данные. Проверь формат таблицы.');
+    ITEMS = prepareItems(items);
+    localStorage.setItem(SHEETS_KEY, url);
+    setStatus('ok', `Загружено из Google Sheets · ${items.length} элементов`);
+    document.getElementById('config-bar').style.display = 'none';
+    buildRadar();
+  } catch(e) {
+    setStatus('err', 'Ошибка загрузки');
+    showError(`Не удалось загрузить данные: ${e.message}. <a href="#" onclick="showInstructions();return false;">Проверь инструкцию</a>`);
+    if (!ITEMS.length) { ITEMS = prepareItems(FALLBACK_ITEMS); buildRadar(); }
+  } finally {
+    showOverlay(false);
+  }
+}
+
+function setStatus(state, text) {
+  const dot = document.getElementById('status-dot');
+  dot.className = '';
+  dot.classList.add(state);
+  document.getElementById('status-text').textContent = text;
+}
+function showOverlay(show) { document.getElementById('loading-overlay').classList.toggle('hidden', !show); }
+function hideError() { document.getElementById('error-msg').style.display='none'; }
+function showError(html) { const el=document.getElementById('error-msg'); el.innerHTML=html; el.style.display='block'; }
+function toggleConfig() {
+  const bar = document.getElementById('config-bar');
+  bar.style.display = bar.style.display === 'none' ? 'flex' : 'none';
+  const saved = localStorage.getItem(SHEETS_KEY);
+  if (saved) document.getElementById('sheets-url-input').value = saved;
+}
+function showInstructions() {
+  alert(`Как получить CSV-ссылку из Google Sheets:\n\n1. Открой таблицу в Google Sheets\n2. Меню → Файл → Поделиться → Опубликовать в интернете\n3. Выбери нужный лист и формат «Электронная таблица Microsoft Excel (.xlsx)»\n4. Нажми «Опубликовать» и скопируй ссылку\n\nФормат таблицы (первая строка — заголовки):\nname, quadrant, ring, description\n\nquadrant: methods / tools / ai / process\nring: 0 (Это база) / 1 (В части команд) / 2 (Единицы пробуют) / 3 (Присматриваемся)`);
+}
+
+// ── Radar rendering ─────────────────────────────────────────
+const CX=280, CY=280, NS='http://www.w3.org/2000/svg';
+function svgEl(tag,attrs,parent){const e=document.createElementNS(NS,tag);for(const[k,v]of Object.entries(attrs))e.setAttribute(k,v);if(parent)parent.appendChild(e);return e;}
+function seedAngle(name,q){let h=0;for(let i=0;i<name.length;i++)h=(h*31+name.charCodeAt(i))&0xfffff;const[a1,a2]=QUADS[q].angle,m=0.13;return a1+m+((h%1000)/1000)*(a2-a1-m*2);}
+function seedRadius(name,ring){let h=0;for(let i=0;i<name.length;i++)h=(h*17+name.charCodeAt(i))&0xfffff;const inner=ring===0?12:RINGS[ring-1].r+10,outer=RINGS[ring].r-12;return inner+((h%1000)/1000)*(outer-inner);}
+function placeDots(items){
+  const p=items.map(d=>{const a=seedAngle(d.name,d.q),r=seedRadius(d.name,d.ring);return{...d,x:CX+r*Math.cos(a),y:CY+r*Math.sin(a)};});
+  for(let it=0;it<180;it++)for(let i=0;i<p.length;i++)for(let j=i+1;j<p.length;j++){
+    const dx=p[j].x-p[i].x,dy=p[j].y-p[i].y,dist=Math.sqrt(dx*dx+dy*dy);
+    if(dist<16&&dist>0){const push=(16-dist)/2,nx=dx/dist,ny=dy/dist;p[i].x-=nx*push;p[i].y-=ny*push;p[j].x+=nx*push;p[j].y+=ny*push;}
+  }
+  return p;
+}
+
+let dots=[], dotEls=[], activeQ='all', activeR='all';
+
+function buildRadar(){
+  document.getElementById('dl').innerHTML=''; dotEls=[];
+  dots = placeDots(ITEMS);
+  const tt = document.getElementById('rtt');
+  for(const d of dots){
+    const g=svgEl('g',{cursor:'pointer'},document.getElementById('dl'));
+    const c=svgEl('circle',{cx:d.x,cy:d.y,r:'11',fill:RINGS[d.ring].color,opacity:'0.88'},g);
+    const t=svgEl('text',{x:d.x,y:d.y,'text-anchor':'middle','dominant-baseline':'central','font-size':'7.5','font-weight':'600',fill:'white','font-family':'Helvetica Neue,Arial,sans-serif'},g);
+    t.textContent=d.num;
+    g._d=d; g._c=c; dotEls.push(g);
+    g.addEventListener('mouseenter',()=>{
+      c.setAttribute('r','14'); c.setAttribute('opacity','1');
+      tt.innerHTML=`<b>${d.num}. ${d.name}</b>${d.desc?`<br><span style="color:var(--text2);font-size:11px">${d.desc}</span>`:''}`;
+      tt.style.display='block';
+      const scale=document.getElementById('rs').getBoundingClientRect().width/560;
+      tt.style.left=(d.x*scale+14)+'px'; tt.style.top=((d.y-22)*scale)+'px';
+      hlLeg(d.num);
+    });
+    g.addEventListener('mouseleave',()=>{c.setAttribute('r','11');c.setAttribute('opacity','0.88');tt.style.display='none';hlLeg(null);});
+  }
+  applyFilters();
+}
+
+function hlLeg(num){document.querySelectorAll('.leg-item').forEach(el=>el.classList.toggle('hl',el.dataset.num==num));}
+
+function applyFilters(){
+  dotEls.forEach(g=>{const d=g._d;const ok=(activeQ==='all'||d.q===activeQ)&&(activeR==='all'||d.ring===parseInt(activeR));g.setAttribute('opacity',ok?'1':'0.05');});
+  renderLegend();
+}
+
+function renderLegend(){
+  const ll=document.getElementById('leg-left'), lr=document.getElementById('leg-right');
+  ll.innerHTML=''; lr.innerHTML='';
+  for(const[qk,qdata]of Object.entries(QUADS)){
+    if(activeQ!=='all'&&activeQ!==qk) continue;
+    const container=qdata.side==='left'?ll:lr;
+    const sec=document.createElement('div'); sec.className='leg-section';
+    const title=document.createElement('div'); title.className='leg-qtitle'; title.style.color=qdata.color; title.textContent=qdata.name;
+    sec.appendChild(title);
+    for(let r=0;r<4;r++){
+      if(activeR!=='all'&&activeR!=r) continue;
+      const ri=dots.filter(d=>d.q===qk&&d.ring===r); if(!ri.length) continue;
+      const rg=document.createElement('div'); rg.className='leg-rgroup';
+      const rl=document.createElement('div'); rl.className='leg-rlabel'; rl.style.color=RINGS[r].color; rl.textContent=RINGS[r].name;
+      rg.appendChild(rl);
+      for(const d of ri){
+        const item=document.createElement('div'); item.className='leg-item'; item.dataset.num=d.num;
+        item.innerHTML=`<span class="n">${d.num}.</span><span>${d.name}</span>`;
+        item.addEventListener('mouseenter',()=>{const g=dotEls.find(g=>g._d.num===d.num);if(g){g._c.setAttribute('r','14');g._c.setAttribute('opacity','1');}hlLeg(d.num);});
+        item.addEventListener('mouseleave',()=>{const g=dotEls.find(g=>g._d.num===d.num);if(g){g._c.setAttribute('r','11');g._c.setAttribute('opacity','0.88');}hlLeg(null);});
+        rg.appendChild(item);
+      }
+      sec.appendChild(rg);
+    }
+    container.appendChild(sec);
+  }
+}
+
+document.querySelectorAll('.fbtn').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.fbtn').forEach(x=>x.classList.remove('active'));b.classList.add('active');activeQ=b.dataset.q;applyFilters();}));
+document.querySelectorAll('.rbtn').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.rbtn').forEach(x=>x.classList.remove('active'));b.classList.add('active');activeR=b.dataset.r;applyFilters();}));
+
+// ── Init ────────────────────────────────────────────────────
+(async function init(){
+  const saved = localStorage.getItem(SHEETS_KEY);
+  if (saved) {
+    document.getElementById('sheets-url-input').value = saved;
+    await loadFromSheets();
+  } else {
+    // Use fallback data
+    ITEMS = prepareItems(FALLBACK_ITEMS);
+    setStatus('', 'Встроенные данные · подключи Google Sheets xlsx для совместного редактирования');
+    buildRadar();
+  }
+})();
+</script>
+</body>
+</html>
